@@ -22,14 +22,22 @@ struct Nepratele {
 PredJmena dataPredJmena[] = {
   {"Huge",3,0},
   {"Small",-1,0},
-  {"Violent",2,2},
-  {"Rude",0,3}
+  {"Violent",2,2},  
+  {"Rude",0,3},
+  {"Stupid",-1,-1},
+  {"Angry",0,2},
+  {"Smart",-2,3},
+  {"Hungry",0,2}
+
 };
 
 Nepratele dataNepratele[] = {
   {"Slime", 3,1},
   {"Skeleton", 2,2},
-  {"Wolf", 3,3}
+  {"Wolf", 3,3},
+  {"Zombie",4,1},
+  {"Bear",10,2},
+  {"Bandit",3,5}
 };
 
 const int dataPredJmenaSize = sizeof(dataPredJmena) / sizeof(dataPredJmena[0]);
@@ -42,7 +50,7 @@ const int dataNeprateleSize = sizeof(dataNepratele) / sizeof(dataNepratele[0]);
   int level = 1;
   int expirience = 1;
   int attack = 2;
-  int coins = 0;
+  int coins = 1;
 
 int enemyHealth;
 int enemyDamage;
@@ -51,7 +59,10 @@ int enemyExpirence;
   enum Loaction{
     home,
     exporing,
-    fighting
+    fighting,
+    barn,
+    locations,
+    work
   };
 
 // CHARACTERS
@@ -127,7 +138,7 @@ int enemyExpirence;
     };
 
 
-int menuSelection;
+int menuSelection = 1;
 float time;
 Loaction location;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -155,8 +166,18 @@ void setup()
   lcd.createChar(6,coinChar);
 
   location = home;
+  StartScreen();
   MainScreen();
+}
 
+void StartScreen()
+{
+  lcd.setCursor(2, 0);
+  lcd.print("Arduino RPG");
+  lcd.setCursor(3, 1);
+  lcd.print("By Francek");
+  delay(2000);
+  return;
 }
 
 void loop() 
@@ -166,29 +187,64 @@ void loop()
   // HOME ONE INPUT
   if (digitalRead(one) == 0 && location == home) 
   {
-    FindEnemy();
+    switch (menuSelection) {
+      case 1:
+        FindEnemy();
+        break;
+      case 2:
+        BarnScreen();
+        break;
+      case 3:
+        LocationScreen();
+        break;
+      case 4:
+        WorkScreen();
+        break;
+
+    }
   }
-  // EXPLORING ONE INPUT
-  if(digitalRead(one) == 0 && location == exporing)
+  // AWAY ONE INPUT
+  if(digitalRead(one) == 0 && location != home)
   {
-    FightScene();
+    switch (location) {
+      case barn:
+        if(coins > 0)
+        {
+          coins--;
+          health = maxHealth;
+          MainScreen();
+        }else {
+        NoCoinsScreen();
+        }
+        break;
+      case exporing:
+        FightScene();
+        break;
+    }
   }
-  // EXPLORING TWO INPUT
-  if(digitalRead(two) == 0 && location == exporing)
+  // TWO INPUT
+  if(digitalRead(two) == 0)
   {
     MainScreen();
   }
   
+  
   if(digitalRead(three) == 0 && location == home)
   {
-    menuSelection++;
-    MainScreen();
+    if(menuSelection < 4)
+    {
+      menuSelection++;
+      MainScreen();
+    }
   }
 
   if(digitalRead(four) == 0 && location == home)
   {
-    menuSelection--;
-    MainScreen();
+    if(menuSelection > 1)
+    {
+      menuSelection--;
+      MainScreen();
+    }
   }
   
 
@@ -212,8 +268,8 @@ void FindEnemy()
   int enemyIndex = 0;
   int atributeIndex = 0;
 
-  enemyIndex = random(0,3);
-  atributeIndex = random(0,3);
+  enemyIndex = random(0,dataNeprateleSize);
+  atributeIndex = random(0,dataPredJmenaSize);
 
   // ZADANI ATRIBUTU
    enemyHealth = dataNepratele[enemyIndex].zivoty + dataPredJmena[atributeIndex].zivotyNavic;
@@ -249,6 +305,8 @@ void FindEnemy()
 
 }
 
+
+
 void FightScene()
 {
 
@@ -261,9 +319,9 @@ void FightScene()
   lcd.write(0);
   lcd.setCursor(1, 1);
   lcd.print(enemyHealth);
-  lcd.setCursor(2, 1);
-  lcd.write(2);
   lcd.setCursor(3, 1);
+  lcd.write(2);
+  lcd.setCursor(4, 1);
   lcd.print(enemyDamage);
 
   lcd.setCursor(13,0);
@@ -283,20 +341,20 @@ void FightScene()
   health -= enemyDamage;
   enemyHealth -= attack;
 
-  if (enemyHealth >= 0 && health >= 0)
+  if (enemyHealth > 0 && health > 0)
     {
     FightScene();
     }
   else
   {
-    if (health <= 0)
+    if (enemyHealth <= 0)
     {
-      health = 1;
-      MainScreen();
+      health = maxHealth;
+      WinScreen(); 
     }else {
     
-    health = maxHealth;
-    WinScreen();
+      health = 1;
+      MainScreen();
     }
   }
   
@@ -402,4 +460,62 @@ void MainScreen()
 
   delay(200);
   
+}
+
+void BarnScreen()
+{
+  lcd.clear();
+  location = barn;
+  
+  lcd.setCursor(0,0);
+  lcd.print("Barn");
+
+  // Lower panel emojis
+  lcd.setCursor(0, 1);
+  lcd.write(3);
+  lcd.setCursor(15, 1);
+  lcd.write(5);
+  lcd.setCursor(1, 1);
+  lcd.print("Sleep");
+  lcd.setCursor(12, 1);
+  lcd.write(6);
+  lcd.setCursor(13, 1);
+  lcd.print("1");
+  
+
+  delay(1000);
+}
+
+void LocationScreen()
+{
+  lcd.clear();
+  location = locations;
+  
+  lcd.setCursor(0,0);
+  lcd.print("Locations");
+
+  delay(1000);
+}
+
+void WorkScreen()
+{
+  lcd.clear();
+  location = work;
+  
+  lcd.setCursor(0,0);
+  lcd.print("Work");
+
+  delay(1000);
+}
+
+void NoCoinsScreen()
+{
+  lcd.clear();
+  lcd.setCursor(3,0);
+  lcd.print("Not enough");
+  lcd.setCursor(5,1);
+  lcd.print("coins!");
+  
+  delay(2000);
+  MainScreen();
 }
