@@ -51,6 +51,7 @@ const int dataNeprateleSize = sizeof(dataNepratele) / sizeof(dataNepratele[0]);
   int expirience = 1;
   int attack = 2;
   int coins = 1;
+  int potions = 0;
 
 int enemyHealth;
 int enemyDamage;
@@ -60,41 +61,41 @@ int enemyExpirence;
     home,
     exporing,
     fighting,
-    barn,
+    village,
     locations,
     work
   };
 
 // CHARACTERS
   byte heartChar[] = {
-  B00000,
-  B01010,
-  B10101,
-  B10001,
-  B10001,
-  B01010,
-  B00100,
-  B00000
+    B00000,
+    B01010,
+    B10101,
+    B10001,
+    B10001,
+    B01010,
+    B00100,
+    B00000
   };
   byte arrowChar[] = {
-  B00100,
-  B01110,
-  B11111,
-  B01110,
-  B01110,
-  B01110,
-  B01110,
-  B00000
+    B00100,
+    B01110,
+    B11111,
+    B01110,
+    B01110,
+    B01110,
+    B01110,
+    B00000
   };
   byte swordChar[] = {
-  B00000,
-  B00000,
-  B00011,
-  B00111,
-  B01110,
-  B01100,
-  B10000,
-  B00000
+    B00000,
+    B00000,
+    B00011,
+    B00111,
+    B01110,
+    B01100,
+    B10000,
+    B00000
   };
   byte checkmarkChar[] = {
     B00000,
@@ -135,10 +136,32 @@ int enemyExpirence;
     B01010,
     B00100,
     B00000
-    };
+  };
+  byte lockChar[] = {
+    B00000,
+    B00000,
+    B00100,
+    B01010,
+    B01010,
+    B11111,
+    B11111,
+    B11111
+  };
+  byte potionChar[] = {
+    B11111,
+    B11111,
+    B01010,
+    B01010,
+    B10001,
+    B10001,
+    B10001,
+    B11111
+  };
 
 
 int menuSelection = 1;
+int villageSelection = 1;
+
 float time;
 Loaction location;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -164,6 +187,7 @@ void setup()
   lcd.createChar(4,crossChar);
   lcd.createChar(5,arrowsChar);
   lcd.createChar(6,coinChar);
+  lcd.createChar(7,potionChar);
 
   location = home;
   StartScreen();
@@ -192,7 +216,7 @@ void loop()
         FindEnemy();
         break;
       case 2:
-        BarnScreen();
+        VillageScreen();
         break;
       case 3:
         LocationScreen();
@@ -207,9 +231,10 @@ void loop()
   if(digitalRead(one) == 0 && location != home)
   {
     switch (location) {
-      case barn:
+      case village:
         if(coins > 0)
         {
+          SleepingScreen();
           coins--;
           health = maxHealth;
           MainScreen();
@@ -229,21 +254,45 @@ void loop()
   }
   
   
-  if(digitalRead(three) == 0 && location == home)
+  if(digitalRead(three) == 0)
   {
-    if(menuSelection < 4)
-    {
-      menuSelection++;
-      MainScreen();
+    switch(location){
+      case home:
+        if(menuSelection < 4)
+        {
+          menuSelection++;
+          MainScreen();
+        }
+        break;
+      case village:
+        if(villageSelection < 4)
+        {
+          villageSelection++;
+          VillageScreen();
+        }
+        break;
+        
+
     }
   }
 
-  if(digitalRead(four) == 0 && location == home)
+  if(digitalRead(four) == 0)
   {
-    if(menuSelection > 1)
-    {
-      menuSelection--;
-      MainScreen();
+    switch(location){
+      case home:
+        if(menuSelection > 1)
+        {
+          menuSelection--;
+          MainScreen();
+        }
+        break;
+      case village:
+        if(villageSelection > 1)
+        {
+          villageSelection--;
+          VillageScreen();
+        }
+        break;
     }
   }
   
@@ -259,6 +308,69 @@ void loop()
   
 
   delay(100);
+}
+
+void MainScreen()
+{
+  
+  location = home;
+  lcd.clear();
+  // HEART / HEALTH
+  lcd.setCursor(0, 0);
+  lcd.write(0);
+  lcd.setCursor(1, 0);
+  lcd.print(health);
+  // ARROW / LEVEL
+  lcd.setCursor(4, 0);
+  lcd.write(1);
+  lcd.setCursor(5, 0);
+  lcd.print(level);
+  // SWORD / ATTACK
+  lcd.setCursor(7, 0);
+  lcd.write(2);
+  lcd.setCursor(8, 0);
+  lcd.print(attack);
+  // COIN / COINS
+  lcd.setCursor(10, 0);
+  lcd.write(6);
+  lcd.setCursor(11, 0);
+  lcd.print(coins);
+
+  lcd.setCursor(13, 0);
+  lcd.write(7);
+  lcd.setCursor(14, 0);
+  lcd.print(potions);
+
+
+  // Lower panel emojis
+  lcd.setCursor(0, 1);
+  lcd.write(3);
+  lcd.setCursor(15, 1);
+  lcd.write(5);
+  lcd.setCursor(1, 1);
+  // Selection of activities
+  switch(menuSelection)
+  {
+      case 1:{
+        lcd.print("Explore");
+        break;
+      }
+      case 2:{
+        lcd.print("Village");
+        break;
+      }
+      case 3:{
+        lcd.print("Locations");
+        break;
+      }
+      case 4:{
+        lcd.print("Work");
+        break;
+      }
+  }
+
+  delay(200);
+  
 }
 
 void FindEnemy()
@@ -404,71 +516,15 @@ void LevelUp()
   delay(3000);
 }
 
-void MainScreen()
-{
-  
-  location = home;
-  lcd.clear();
-  // HEART / HEALTH
-  lcd.setCursor(0, 0);
-  lcd.write(0);
-  lcd.setCursor(1, 0);
-  lcd.print(health);
-  // ARROW / LEVEL
-  lcd.setCursor(4, 0);
-  lcd.write(1);
-  lcd.setCursor(5, 0);
-  lcd.print(level);
-  // SWORD / ATTACK
-  lcd.setCursor(7, 0);
-  lcd.write(2);
-  lcd.setCursor(8, 0);
-  lcd.print(attack);
-  // COIN / COINS
-  lcd.setCursor(10, 0);
-  lcd.write(6);
-  lcd.setCursor(11, 0);
-  lcd.print(coins);
 
 
-  // Lower panel emojis
-  lcd.setCursor(0, 1);
-  lcd.write(3);
-  lcd.setCursor(15, 1);
-  lcd.write(5);
-  lcd.setCursor(1, 1);
-  // Selection of activities
-  switch(menuSelection)
-  {
-      case 1:{
-        lcd.print("Explore");
-        break;
-      }
-      case 2:{
-        lcd.print("Barn");
-        break;
-      }
-      case 3:{
-        lcd.print("Locations");
-        break;
-      }
-      case 4:{
-        lcd.print("Work");
-        break;
-      }
-  }
-
-  delay(200);
-  
-}
-
-void BarnScreen()
+void VillageScreen()
 {
   lcd.clear();
-  location = barn;
+  location = village;
   
   lcd.setCursor(0,0);
-  lcd.print("Barn");
+  lcd.print("Village");
 
   // Lower panel emojis
   lcd.setCursor(0, 1);
@@ -476,14 +532,56 @@ void BarnScreen()
   lcd.setCursor(15, 1);
   lcd.write(5);
   lcd.setCursor(1, 1);
-  lcd.print("Sleep");
-  lcd.setCursor(12, 1);
-  lcd.write(6);
-  lcd.setCursor(13, 1);
-  lcd.print("1");
+
+  switch(villageSelection){
+    case 1:
+      lcd.print("Sleep");
+      lcd.setCursor(12, 1);
+      lcd.write(6);
+      lcd.setCursor(13, 1);
+      lcd.print("1");
+      break;
+    case 2:
+      lcd.print("Play cards");
+      lcd.setCursor(12, 1);
+      lcd.write(6);
+      lcd.setCursor(13, 1);
+      lcd.print("?");
+      break;
+    case 3:
+      lcd.print("Get quest");
+      lcd.setCursor(12, 1);
+      lcd.write(6);
+      lcd.setCursor(13, 1);
+      lcd.print("?");
+      break;
+    case 4:
+      lcd.print("Rob a house");
+      lcd.setCursor(12, 1);
+      lcd.write(6);
+      lcd.setCursor(13, 1);
+      lcd.print("?");
+      break;
+  }
+  
   
 
-  delay(1000);
+  delay(300);
+}
+
+void SleepingScreen()
+{
+  lcd.clear();
+  lcd.setCursor(3, 0);
+  lcd.print("Sleeeping");
+  lcd.setCursor(3, 1);
+  lcd.print("ZZ");
+  for (int i = 5; i < 12; i++) {
+    lcd.setCursor(i, 1);
+    lcd.print("z");
+    delay(500);
+  }
+  return;
 }
 
 void LocationScreen()
@@ -493,6 +591,21 @@ void LocationScreen()
   
   lcd.setCursor(0,0);
   lcd.print("Locations");
+
+  // Lower panel emojis
+  lcd.setCursor(0, 1);
+  lcd.write(4);
+  lcd.setCursor(15, 1);
+  lcd.write(5);
+  lcd.setCursor(1, 1);
+
+  lcd.print("Dark forest");
+  lcd.setCursor(12, 1);
+  lcd.print("5");
+  lcd.setCursor(13, 1);
+  lcd.write(1);
+
+
 
   delay(1000);
 }
