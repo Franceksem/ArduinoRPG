@@ -45,8 +45,8 @@ const int dataNeprateleSize = sizeof(dataNepratele) / sizeof(dataNepratele[0]);
 
 
 // STATS
-  int maxHealth = 10;
-  int health = 10;
+  int maxHealth = 5;
+  int health = 5;
   int level = 1;
   int expirience = 1;
   int attack = 2;
@@ -244,6 +244,12 @@ void loop()
         break;
       case exporing:
         FightScene();
+        break;
+      case locations:
+        MainScreen();
+        break;
+      case work:
+        WorkingScreen();
         break;
     }
   }
@@ -466,6 +472,7 @@ void FightScene()
     }else {
     
       health = 1;
+      LooseScreen();
       MainScreen();
     }
   }
@@ -497,6 +504,23 @@ void WinScreen()
   }
 
   MainScreen();
+}
+
+void LooseScreen()
+{
+  lcd.clear();
+
+  lcd.setCursor(2,0);
+  lcd.print("You got hurt");
+  lcd.setCursor(2,1);
+  lcd.print("you have 1");
+  lcd.setCursor(13,1);
+  lcd.write(0);
+
+  delay(5000);
+
+  return;
+
 }
 
 void LevelUp()
@@ -618,7 +642,45 @@ void WorkScreen()
   lcd.setCursor(0,0);
   lcd.print("Work");
 
-  delay(1000);
+  // Lower panel emojis
+  lcd.setCursor(0, 1);
+  lcd.write(3);
+  lcd.setCursor(15, 1);
+  lcd.write(5);
+  lcd.setCursor(1, 1);
+  lcd.print("Mine");
+
+  delay(500);
+}
+
+void WorkingScreen()
+{
+  lcd.clear();
+  lcd.setCursor(5, 0);
+  lcd.print("Mining");
+  lcd.setCursor(0, 1);
+  for (int i = 0; i < 16;) {
+    if(digitalRead(one) == 0)
+    {
+      lcd.setCursor(i, 1);
+      lcd.print("-");
+      i++;
+    }
+    delay(200);
+  }
+  
+  coins++;
+  lcd.clear();
+  
+  lcd.setCursor(3, 0);
+  lcd.print("You earned");
+  lcd.setCursor(6, 1);
+  lcd.print("1");
+  lcd.setCursor(7, 1);
+  lcd.write(6);
+
+  delay(2000);
+  MainScreen();
 }
 
 void NoCoinsScreen()
