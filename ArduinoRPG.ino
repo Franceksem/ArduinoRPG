@@ -31,7 +31,7 @@ PredJmena dataPredJmena[] = {
 
 };
 
-Nepratele dataNepratele[] = {
+Nepratele dataNepratelePlain[] = {
   {"Slime", 3,1},
   {"Skeleton", 2,2},
   {"Wolf", 3,3},
@@ -40,8 +40,16 @@ Nepratele dataNepratele[] = {
   {"Bandit",3,5}
 };
 
+Nepratele dataNeprateleDarkForest[] = {
+  {"Knight", 10,4},
+  {"Archer", 7,6},
+  {"Goblin", 5,5},
+  {"Orge", 15,3}
+};
+
 const int dataPredJmenaSize = sizeof(dataPredJmena) / sizeof(dataPredJmena[0]);
-const int dataNeprateleSize = sizeof(dataNepratele) / sizeof(dataNepratele[0]);
+const int dataNepratelePlainSize = sizeof(dataNepratelePlain) / sizeof(dataNepratelePlain[0]);
+const int dataNeprateleDarkForestSize = sizeof(dataNeprateleDarkForest) / sizeof(dataNeprateleDarkForest[0]);
 
 
 // STATS
@@ -57,13 +65,18 @@ int enemyHealth;
 int enemyDamage;
 int enemyExpirence;
 
-  enum Loaction{
+  enum LoactionScreen{
     home,
     exporing,
     fighting,
     village,
     locations,
     work
+  };
+  enum Loaction{
+    Plain,
+    DarkForest,
+    Desert
   };
 
 // CHARACTERS
@@ -161,9 +174,11 @@ int enemyExpirence;
 
 int menuSelection = 1;
 int villageSelection = 1;
+int locationSelection = 1;
+int poolSelected = 1;
 
 float time;
-Loaction location;
+LoactionScreen location;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 void setup() 
@@ -246,7 +261,41 @@ void loop()
         FightScene();
         break;
       case locations:
-        MainScreen();
+        switch(locationSelection){
+        case 1:
+          poolSelected = 1;
+          Serial.println(poolSelected);
+          TravelScreen("Plains");
+          break;
+        case 2:
+          if(level >= 5){
+          poolSelected = 2;
+          Serial.println(poolSelected);
+          TravelScreen("Dark Forest");
+          }
+          else{
+          CantGoScreen();
+          }
+          break;
+        case 3:
+          if(level >= 10){
+          poolSelected = 3;
+          TravelScreen("Desert");
+          }
+          else{
+          CantGoScreen();
+          }
+          break;
+        case 4:
+          if(level >= 20){
+          poolSelected = 4;
+          TravelScreen("Volcano");
+          }
+          else{
+          CantGoScreen();
+          }
+          break;
+        }
         break;
       case work:
         WorkingScreen();
@@ -277,6 +326,13 @@ void loop()
           VillageScreen();
         }
         break;
+      case locations:
+        if(locationSelection < 4)
+        {
+          locationSelection++;
+          LocationScreen();
+        }
+        break;
         
 
     }
@@ -299,17 +355,24 @@ void loop()
           VillageScreen();
         }
         break;
+      case locations:
+        if(locationSelection > 1)
+        {
+          locationSelection--;
+          LocationScreen();
+        }
+        break;
     }
   }
   
 
 
-
+  /*
   Serial.println(digitalRead(one));
   Serial.println(digitalRead(two));
   Serial.println(digitalRead(three));
   Serial.println(digitalRead(four));
-
+  */
   
   
 
@@ -385,19 +448,32 @@ void FindEnemy()
   lcd.clear();
   int enemyIndex = 0;
   int atributeIndex = 0;
-
-  enemyIndex = random(0,dataNeprateleSize);
+  Nepratele* selectedPool;
+  int selectedPollSize;
+  switch(poolSelected)
+  {
+    case 1:
+      selectedPool = dataNepratelePlain;
+      selectedPollSize = dataNepratelePlainSize;
+      break;
+    case 2:
+      selectedPool = dataNeprateleDarkForest;
+      selectedPollSize = dataNeprateleDarkForestSize;
+      break;
+  }
+  
+  enemyIndex = random(0,selectedPollSize);
   atributeIndex = random(0,dataPredJmenaSize);
 
   // ZADANI ATRIBUTU
-   enemyHealth = dataNepratele[enemyIndex].zivoty + dataPredJmena[atributeIndex].zivotyNavic;
-   enemyDamage = dataNepratele[enemyIndex].poskozeni + dataPredJmena[atributeIndex].poskozeniNavic;
+   enemyHealth = selectedPool[enemyIndex].zivoty + dataPredJmena[atributeIndex].zivotyNavic;
+   enemyDamage = selectedPool[enemyIndex].poskozeni + dataPredJmena[atributeIndex].poskozeniNavic;
    enemyExpirence = enemyDamage + enemyHealth;
   // VYKRESLENI JMEN
     lcd.setCursor(0, 0);
     lcd.print(dataPredJmena[atributeIndex].predjmeno);
     lcd.setCursor(0, 1);
-    lcd.print(dataNepratele[enemyIndex].jmeno);
+    lcd.print(selectedPool[enemyIndex].jmeno);
   // VYKRESLOVANI ATRIBUTU
     lcd.setCursor(7, 0);
     lcd.write(0);
@@ -615,23 +691,69 @@ void LocationScreen()
   
   lcd.setCursor(0,0);
   lcd.print("Locations");
-
-  // Lower panel emojis
-  lcd.setCursor(0, 1);
-  lcd.write(4);
   lcd.setCursor(15, 1);
   lcd.write(5);
+
   lcd.setCursor(1, 1);
+  switch(locationSelection){
+    case 1:
+      lcd.print("Plains");
+      lcd.setCursor(12, 1);
+      lcd.print("1");
+      lcd.setCursor(13, 1);
+      lcd.write(1);
+      lcd.setCursor(0, 1);
+      if(level >= 0){
+        lcd.write(3);
+      } else{
+        lcd.write(4);
+      }
+      break;
+    case 2:
+      lcd.print("Dark Forest");
+      lcd.setCursor(12, 1);
+      lcd.print("5");
+      lcd.setCursor(13, 1);
+      lcd.write(1);
+      lcd.setCursor(0, 1);
+      if(level >= 5){
+        lcd.write(3);
+      } else{
+        lcd.write(4);
+      }
+      break;
+    case 3:
+      lcd.print("Desert");
+      lcd.setCursor(11, 1);
+      lcd.print("10");
+      lcd.setCursor(13, 1);
+      lcd.write(1);
+      lcd.setCursor(0, 1);
+      if(level >= 10){
+        lcd.write(3);
+      } else{
+        lcd.write(4);
+      }
+      break;
+    case 4:
+      lcd.print("Volcano");
+      lcd.setCursor(11, 1);
+      lcd.print("20");
+      lcd.setCursor(13, 1);
+      lcd.write(1);
+      lcd.setCursor(0, 1);
+      if(level >= 20){
+        lcd.write(3);
+      } else{
+        lcd.write(4);
+      }
+      break;
+  }
 
-  lcd.print("Dark forest");
-  lcd.setCursor(12, 1);
-  lcd.print("5");
-  lcd.setCursor(13, 1);
-  lcd.write(1);
 
 
 
-  delay(1000);
+  delay(200);
 }
 
 void WorkScreen()
@@ -690,6 +812,30 @@ void NoCoinsScreen()
   lcd.print("Not enough");
   lcd.setCursor(5,1);
   lcd.print("coins!");
+  
+  delay(2000);
+  MainScreen();
+}
+
+void CantGoScreen()
+{
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("You are too weak");
+  lcd.setCursor(1,1);
+  lcd.print("get some exp");
+  
+  delay(2000);
+  MainScreen();
+}
+
+void TravelScreen(String locationName)
+{
+  lcd.clear();
+  lcd.setCursor(2,0);
+  lcd.print("You are in");
+  lcd.setCursor(3,1);
+  lcd.print(locationName);
   
   delay(2000);
   MainScreen();
