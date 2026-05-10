@@ -26,17 +26,17 @@ PredJmena dataPredJmena[] = {
   {"Rude",0,3},
   {"Stupid",-1,-1},
   {"Angry",0,2},
-  {"Smart",-2,3},
+  {"Smart",-1,3},
   {"Hungry",0,2}
 
 };
 
 Nepratele dataNepratelePlain[] = {
-  {"Slime", 3,1},
+  {"Slime", 3,2},
   {"Skeleton", 2,2},
   {"Wolf", 3,3},
   {"Zombie",4,1},
-  {"Bear",10,2},
+  {"Bear",8,2},
   {"Bandit",3,5}
 };
 
@@ -47,9 +47,18 @@ Nepratele dataNeprateleDarkForest[] = {
   {"Orge", 15,3}
 };
 
+Nepratele dataNeprateleDesert[] = {
+  {"Mummy",15,5},
+  {"Indian",12,8},
+  {"Pharaon",17,10},
+  {"Snake",13,7}
+};
+
 const int dataPredJmenaSize = sizeof(dataPredJmena) / sizeof(dataPredJmena[0]);
+
 const int dataNepratelePlainSize = sizeof(dataNepratelePlain) / sizeof(dataNepratelePlain[0]);
 const int dataNeprateleDarkForestSize = sizeof(dataNeprateleDarkForest) / sizeof(dataNeprateleDarkForest[0]);
+const int dataNeprateleDesertSize = sizeof(dataNeprateleDesert) / sizeof(dataNeprateleDesert[0]);
 
 
 // STATS
@@ -59,7 +68,7 @@ const int dataNeprateleDarkForestSize = sizeof(dataNeprateleDarkForest) / sizeof
   int expirience = 1;
   int attack = 2;
   int coins = 1;
-  int potions = 0;
+  int potions = 5;
 
 int enemyHealth;
 int enemyDamage;
@@ -247,16 +256,23 @@ void loop()
   {
     switch (location) {
       case village:
-        if(coins > 0)
-        {
-          SleepingScreen();
-          coins--;
-          health = maxHealth;
-          MainScreen();
-        }else {
-        NoCoinsScreen();
-        }
-        break;
+        switch (villageSelection) {
+          case 1:
+            if (coins > 0){
+            SleepingScreen();
+            coins--;
+            health = maxHealth;
+            MainScreen();
+            }else {
+            NoCoinsScreen();
+            }
+            break;
+          case 2:
+            PlayCards();
+            MainScreen();
+            break;
+          }break;
+        
       case exporing:
         FightScene();
         break;
@@ -264,13 +280,11 @@ void loop()
         switch(locationSelection){
         case 1:
           poolSelected = 1;
-          Serial.println(poolSelected);
           TravelScreen("Plains");
           break;
         case 2:
           if(level >= 5){
           poolSelected = 2;
-          Serial.println(poolSelected);
           TravelScreen("Dark Forest");
           }
           else{
@@ -295,8 +309,8 @@ void loop()
           CantGoScreen();
           }
           break;
-        }
-        break;
+          }
+          break;
       case work:
         WorkingScreen();
         break;
@@ -460,6 +474,9 @@ void FindEnemy()
       selectedPool = dataNeprateleDarkForest;
       selectedPollSize = dataNeprateleDarkForestSize;
       break;
+    case 3:
+      selectedPool = dataNeprateleDesert;
+      selectedPollSize = dataNeprateleDesertSize;
   }
   
   enemyIndex = random(0,selectedPollSize);
@@ -541,19 +558,35 @@ void FightScene()
     }
   else
   {
-    if (enemyHealth <= 0)
+    if (health <= 0)
     {
-      health = maxHealth;
-      WinScreen(); 
-    }else {
-    
+      if(potions > 0)
+      {
+        health = maxHealth;
+        potions--;
+        TakePotion();
+        
+      } else{
       health = 1;
       LooseScreen();
-      MainScreen();
+      }
+    }else if(enemyHealth < 1) {
+      
+      health = maxHealth;
+      WinScreen(); 
     }
   }
   
 
+}
+
+void TakePotion()
+{
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("You took potion");
+  delay(1000);
+  FightScene();
 }
 
 void WinScreen()
@@ -595,7 +628,7 @@ void LooseScreen()
 
   delay(5000);
 
-  return;
+  MainScreen();
 
 }
 
@@ -615,8 +648,6 @@ void LevelUp()
   lcd.print("Stats icreased");
   delay(3000);
 }
-
-
 
 void VillageScreen()
 {
@@ -839,4 +870,13 @@ void TravelScreen(String locationName)
   
   delay(2000);
   MainScreen();
+}
+
+void PlayCards()
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Play games");
+  delay(2000);
+  return;
 }
