@@ -32,26 +32,33 @@ PredJmena dataPredJmena[] = {
 };
 
 Nepratele dataNepratelePlain[] = {
-  {"Slime", 3,2},
-  {"Skeleton", 2,2},
-  {"Wolf", 3,3},
-  {"Zombie",4,1},
-  {"Bear",8,2},
-  {"Bandit",3,5}
+  {"Slime", 7,2},
+  {"Skeleton", 8,2},
+  {"Wolf", 10,3},
+  {"Zombie",6,1},
+  {"Bear",12,2},
+  {"Bandit",8,5}
 };
 
 Nepratele dataNeprateleDarkForest[] = {
-  {"Knight", 10,4},
-  {"Archer", 7,6},
-  {"Goblin", 5,5},
-  {"Orge", 15,3}
+  {"Knight", 20,4},
+  {"Archer", 14,6},
+  {"Goblin", 14,5},
+  {"Orge", 25,4}
 };
 
 Nepratele dataNeprateleDesert[] = {
-  {"Mummy",15,5},
-  {"Indian",12,8},
-  {"Pharaon",17,10},
-  {"Snake",13,7}
+  {"Mummy",22,5},
+  {"Indian",20,8},
+  {"Pharaon",25,10},
+  {"Snake",23,7}
+};
+
+Nepratele dataNeprateleVolcano[] = {
+  {"Ghost",35,5},
+  {"Spirit",34,7},
+  {"Miner",27,10},
+  {"Phoenix",40,15}
 };
 
 const int dataPredJmenaSize = sizeof(dataPredJmena) / sizeof(dataPredJmena[0]);
@@ -59,13 +66,15 @@ const int dataPredJmenaSize = sizeof(dataPredJmena) / sizeof(dataPredJmena[0]);
 const int dataNepratelePlainSize = sizeof(dataNepratelePlain) / sizeof(dataNepratelePlain[0]);
 const int dataNeprateleDarkForestSize = sizeof(dataNeprateleDarkForest) / sizeof(dataNeprateleDarkForest[0]);
 const int dataNeprateleDesertSize = sizeof(dataNeprateleDesert) / sizeof(dataNeprateleDesert[0]);
+const int dataNeprateleVolcanoSize = sizeof(dataNeprateleVolcano) / sizeof(dataNeprateleVolcano[0]);
 
 
 // STATS
-  int maxHealth = 5;
-  int health = 5;
+  int maxHealth = 15;
+  int health = 15;
   int level = 1;
   int expirience = 1;
+  float expToNextLevel = 50;
   int attack = 2;
   int coins = 1;
   int potions = 5;
@@ -477,6 +486,10 @@ void FindEnemy()
     case 3:
       selectedPool = dataNeprateleDesert;
       selectedPollSize = dataNeprateleDesertSize;
+      break;
+    case 4:
+      selectedPool = dataNeprateleVolcano;
+      selectedPollSize = dataNeprateleVolcanoSize;
   }
   
   enemyIndex = random(0,selectedPollSize);
@@ -516,8 +529,6 @@ void FindEnemy()
 
 }
 
-
-
 void FightScene()
 {
 
@@ -552,30 +563,29 @@ void FightScene()
   health -= enemyDamage;
   enemyHealth -= attack;
 
+
   if (enemyHealth > 0 && health > 0)
-    {
-    FightScene();
-    }
-  else
   {
-    if (health <= 0)
-    {
-      if(potions > 0)
-      {
-        health = maxHealth;
-        potions--;
-        TakePotion();
-        
-      } else{
+    FightScene();
+  }
+  else if (enemyHealth <= 0) 
+  {
+    
+    health = maxHealth;
+    WinScreen();
+  }
+  else if(health <= 0)
+  {
+    if (potions > 0) {
+      potions--;
+      health = maxHealth;
+      TakePotion();
+    }else {
       health = 1;
       LooseScreen();
-      }
-    }else if(enemyHealth < 1) {
-      
-      health = maxHealth;
-      WinScreen(); 
     }
   }
+  
   
 
 }
@@ -607,7 +617,7 @@ void WinScreen()
 
   delay(3000);
 
-  if(expirience >= 10)
+  if(expirience >= expToNextLevel)
   {
     LevelUp();
   }
@@ -635,18 +645,24 @@ void LooseScreen()
 void LevelUp()
 {
 
-  expirience = expirience - 10;
+  expirience = expirience - expToNextLevel;
   level++;
   maxHealth++;
   attack++;
 
   health = maxHealth;
+
+  expToNextLevel *= 1.2;
+  Serial.println(expToNextLevel);
+
   lcd.clear();
   lcd.setCursor(4,0);
   lcd.print("Level up!");
   lcd.setCursor(1,1);
   lcd.print("Stats icreased");
   delay(3000);
+
+  MainScreen();
 }
 
 void VillageScreen()
